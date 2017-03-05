@@ -25,9 +25,8 @@
     "build": "gulp build:prod"
   },
   "dependencies": {
-    "delayed-stream": "^1.0.0",
     "event-stream": "^3.3.4",
-    "immutable": "^3.8.1",
+    "gulp-build-index": "^0.1.0",
     "through2": "^2.0.3"
   },
   "devDependencies": {
@@ -38,7 +37,6 @@
     "eslint-plugin-react": "^6.10.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
-    "gulp-build-index": "^0.1.0",
     "gulp-cli": "^1.2.2",
     "gulp-eslint": "^3.0.1",
     "jest": "^19.0.2",
