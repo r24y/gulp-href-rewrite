@@ -1,0 +1,49 @@
+---
+sampleMd:
+  base: /home/r24y/projects/foo
+  files:
+    - path: README.md
+      contents: Simple foo project that helps you manage your foo.
+      links:
+        - href: ./api.md
+          expected: /api.html
+        - href: ./CONTRIBUTING.md
+          expected: /CONTRIBUTING.md
+    - path: api.md
+      contents: Foo endpoint helps you foo bar baz
+      links:
+        - href: ./README.md
+          expected: /index.html
+    - path: CONTRIBUTING.md
+      contents: Please help me with my foo project
+sampleMdDocs:
+  base: /home/r24y/projects/foo
+  files:
+    - path: README.md
+      contents: Simple foo project that helps you manage your foo.
+      links:
+        - href: ./docs/api.md
+          expected: /docs/api.html
+        - href: ./docs/CONTRIBUTING.md
+          expected: /docs/CONTRIBUTING.html
+    - path: docs/api.md
+      contents: Foo endpoint helps you foo bar baz
+      links:
+        - href: ../README.md
+          expected: /index.html
+    - path: docs/CONTRIBUTING.md
+      contents: Please help me with my foo project
+movingFilesWithIndex:
+  base: /home/r24y/sites/vacation-pix
+  files:
+    - path: README.md
+    - path: paris/README.md
+      links:
+        - href: eiffel.jpg
+          expected: /paris/eiffel.jpg
+        - href: louvre.jpg
+          expected: /paris/louvre.jpg
+        - href: ../README.md
+          expected: /index.html
+    - path: paris/eiffel.jpg
+    - path: paris/louvre.jpg
