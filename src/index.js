@@ -15,9 +15,9 @@ function defaultTransform(file/*: Vinyl */)/*: string */ {
   const {name, dir, ext} = pathParse(file.path);
   if (ext.match(INDEX_EXTENSION_RE)) {
     if (name.match(INDEX_BASENAME_RE)) {
-      return join(dir, 'index.html');
+      return resolve('/', join(dir, 'index.html'));
     }
-    return join(dir, `${name}.html`);
+    return resolve('/', join(dir, `${name}.html`));
   }
   return null;
 }
@@ -76,7 +76,7 @@ export default function rewriteHref({
   input.pipe(through2.obj(rebase))
   .pipe(buildIndex('rewrittenFilepath', (file, emit, done) => {
     const newPath = transform(file);
-    if (newPath) emit(relative(file.base, file.path), newPath);
+    if (newPath) emit(file.path, newPath);
     done();
   }))
   // Build an index of rewritten index-files.
@@ -84,9 +84,10 @@ export default function rewriteHref({
     const relPath = relative(file.base, file.path);
     const lookupResults = file.lookupRewrittenFilepath(relPath);
     const targetPath = lookupResults ? lookupResults[0] : null;
-    if (isIndex(file, targetPath)) {
+
+    if (targetPath && isIndex(file, targetPath)) {
       emit(
-        dirname(relPath),
+        resolve('/', dirname(relPath)),
         dirname(targetPath)
       );
     }
@@ -105,37 +106,39 @@ export default function rewriteHref({
       }
       /** Resolve the full path to the desired target file. */
       const referencedFilePath = resolve(dirname(file.path), href);
-      /**
-       * Relative path from Gulp base to target file, since that's how the
-       * filepath mapping is cached.
-       */
-      const relPath = relative(file.base, referencedFilePath);
       // See if the new filename is directly available.
       {
-        const cachedRelTargetPath = lookupRewrittenFilepath(relPath);
+        const cachedRelTargetPath = lookupRewrittenFilepath(referencedFilePath);
         if (cachedRelTargetPath) {
           return resolve('/', relative(file.base, cachedRelTargetPath[0]));
         }
       }
       // If we get here, the mapping wasn't in the cache.
       /** Current working directory; will be updated as we traverse upwards. */
-      let currentDir = dirname(relPath);
-      for (let i = 0; i < (relPath.split(sep).length - 1); i++) {
+      let currentDir = dirname(referencedFilePath);
+      for (let i = 0; i < (referencedFilePath.split(sep).length - 1); i++) {
         const transformedDir = lookupRewrittenIndex(currentDir);
         if (transformedDir) {
-          const transformedHref = join(transformedDir[0], basename(relPath));
+          const transformedHref = join(
+            transformedDir[0], basename(referencedFilePath));
           return transformedHref;
         }
         // No match; traverse to parent dir.
         currentDir = dirname(currentDir);
       }
       // No match at all; just return the relative path.
-      return relPath;
+      return referencedFilePath;
     };
-    const transformedFilename = modifiedFile.rewriteHref(
-      relative(file.base, file.path)
+    const lookedUpFilepath = lookupRewrittenFilepath(
+      file.path
     );
-    modifiedFile.path = resolve(file.base, transformedFilename);
+    if (lookedUpFilepath) {
+      modifiedFile.path = resolve(file.base, lookedUpFilepath[0]);
+    } else {
+      modifiedFile.path = resolve(file.base, modifiedFile.rewriteHref(
+        file.path
+      ));
+    }
     done(null, modifiedFile);
   }))
   .pipe(output);
